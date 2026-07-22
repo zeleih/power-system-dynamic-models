@@ -10,6 +10,7 @@ from power_system_dynamic_models.andes import TGOV5, TGOV5Data, register_tgov5
 
 ROOT = Path(__file__).resolve().parents[1]
 PARAMETERS = ROOT / "models" / "tgov5_gumede2016" / "parameters.json"
+REFERENCE = ROOT / "docs" / "TGOV5_MODEL_REFERENCE.rst"
 
 
 def test_parameter_bundle_is_complete_and_physically_compatible() -> None:
@@ -28,6 +29,35 @@ def test_pressure_intervention_is_separate_and_default_on() -> None:
 
     assert data.PSEL.default == 1.0
     assert "PSEL" not in json.loads(PARAMETERS.read_text())["parameters"]
+
+
+def test_model_metadata_is_complete_for_andes_reference_docs() -> None:
+    data = TGOV5Data()
+    undocumented = [
+        name
+        for name, parameter in data.params.items()
+        if name not in {"idx", "u", "name", "syn", "Tn", "wref0"}
+        and not parameter.info
+    ]
+
+    assert undocumented == []
+    assert "single-shaft" in (TGOV5.__doc__ or "").lower()
+    assert "PSEL" in (TGOV5.__doc__ or "")
+    assert "90 s" in (TGOV5.__doc__ or "")
+
+    reference = REFERENCE.read_text()
+    for section in (
+        "Parameters",
+        "Variables",
+        "Initialization Equations",
+        "Differential Equations",
+        "Algebraic Equations",
+        "Services",
+        "Discretes",
+        "Blocks",
+    ):
+        assert f"{section}\n{'-' * len(section)}" in reference
+    assert "Governor lag time constant" in reference
 
 
 def test_symbolic_model_contract() -> None:

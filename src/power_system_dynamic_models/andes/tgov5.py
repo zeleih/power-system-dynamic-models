@@ -51,33 +51,144 @@ class TGOV5Data(TGBaseData):
             tex_name="K",
             info="Governor gain 1/R on turbine base",
         )
-        self.T1 = NumParam(default=0.1, tex_name="T_1", unit="s")
-        self.T2 = NumParam(default=0.0, tex_name="T_2", unit="s")
-        self.T3 = NumParam(default=0.3, tex_name="T_3", unit="s")
-        self.UO = NumParam(default=0.2, tex_name="U_o", unit="p.u./s")
-        self.UC = NumParam(default=-0.2, tex_name="U_c", unit="p.u./s")
-        self.VMAX = NumParam(default=1.15, tex_name="V_{MAX}", unit="p.u.")
-        self.VMIN = NumParam(default=0.0, tex_name="V_{MIN}", unit="p.u.")
+        self.T1 = NumParam(
+            default=0.1,
+            tex_name="T_1",
+            unit="s",
+            info="Governor lag time constant",
+        )
+        self.T2 = NumParam(
+            default=0.0,
+            tex_name="T_2",
+            unit="s",
+            info="Governor lead time constant",
+        )
+        self.T3 = NumParam(
+            default=0.3,
+            tex_name="T_3",
+            unit="s",
+            info="Valve servo time constant",
+        )
+        self.UO = NumParam(
+            default=0.2,
+            tex_name="U_o",
+            unit="p.u./s",
+            info="Maximum valve opening rate",
+        )
+        self.UC = NumParam(
+            default=-0.2,
+            tex_name="U_c",
+            unit="p.u./s",
+            info="Maximum valve closing rate",
+        )
+        self.VMAX = NumParam(
+            default=1.15,
+            tex_name="V_{MAX}",
+            unit="p.u.",
+            info="Maximum valve position",
+        )
+        self.VMIN = NumParam(
+            default=0.0,
+            tex_name="V_{MIN}",
+            unit="p.u.",
+            info="Minimum valve position",
+        )
 
-        self.T4 = NumParam(default=0.2, tex_name="T_4", unit="s")
-        self.K1 = NumParam(default=0.3, tex_name="K_1")
-        self.K2 = NumParam(default=0.0, tex_name="K_2")
-        self.T5 = NumParam(default=15.0, tex_name="T_5", unit="s")
-        self.K3 = NumParam(default=0.3, tex_name="K_3")
-        self.K4 = NumParam(default=0.0, tex_name="K_4")
-        self.T6 = NumParam(default=0.3, tex_name="T_6", unit="s")
-        self.K5 = NumParam(default=0.4, tex_name="K_5")
-        self.K6 = NumParam(default=0.0, tex_name="K_6")
-        self.T7 = NumParam(default=0.0, tex_name="T_7", unit="s")
-        self.K7 = NumParam(default=0.0, tex_name="K_7")
-        self.K8 = NumParam(default=0.0, tex_name="K_8")
+        self.T4 = NumParam(
+            default=0.2,
+            tex_name="T_4",
+            unit="s",
+            info="Steam chest and inlet piping time constant",
+        )
+        self.K1 = NumParam(
+            default=0.3,
+            tex_name="K_1",
+            info="First power coefficient on the steam-chest output",
+        )
+        self.K2 = NumParam(
+            default=0.0,
+            tex_name="K_2",
+            info="Second power coefficient on the steam-chest output",
+        )
+        self.T5 = NumParam(
+            default=15.0,
+            tex_name="T_5",
+            unit="s",
+            info="First reheat time constant",
+        )
+        self.K3 = NumParam(
+            default=0.3,
+            tex_name="K_3",
+            info="First power coefficient on the first-reheat output",
+        )
+        self.K4 = NumParam(
+            default=0.0,
+            tex_name="K_4",
+            info="Second power coefficient on the first-reheat output",
+        )
+        self.T6 = NumParam(
+            default=0.3,
+            tex_name="T_6",
+            unit="s",
+            info="Second turbine-stage time constant",
+        )
+        self.K5 = NumParam(
+            default=0.4,
+            tex_name="K_5",
+            info="First power coefficient on the second-stage output",
+        )
+        self.K6 = NumParam(
+            default=0.0,
+            tex_name="K_6",
+            info="Second power coefficient on the second-stage output",
+        )
+        self.T7 = NumParam(
+            default=0.0,
+            tex_name="T_7",
+            unit="s",
+            info="Final turbine-stage time constant",
+        )
+        self.K7 = NumParam(
+            default=0.0,
+            tex_name="K_7",
+            info="First power coefficient on the final-stage output",
+        )
+        self.K8 = NumParam(
+            default=0.0,
+            tex_name="K_8",
+            info="Second power coefficient on the final-stage output",
+        )
 
-        self.K9 = NumParam(default=0.01, tex_name="K_9")
-        self.K10 = NumParam(default=0.0, tex_name="K_{10}")
-        self.K11 = NumParam(default=0.0, tex_name="K_{11}")
-        self.K12 = NumParam(default=0.01, tex_name="K_{12}")
-        self.K13 = NumParam(default=0.0, tex_name="K_{13}")
-        self.K14 = NumParam(default=0.1, tex_name="K_{14}")
+        self.K9 = NumParam(
+            default=0.01,
+            tex_name="K_9",
+            info="Pressure-dependent steam-flow loss coefficient",
+        )
+        self.K10 = NumParam(
+            default=0.0,
+            tex_name="K_{10}",
+            info="Steam-flow feedforward gain to the fuel command",
+        )
+        self.K11 = NumParam(
+            default=0.0,
+            tex_name="K_{11}",
+            info="Desired-power feedforward gain to the fuel command",
+        )
+        self.K12 = NumParam(
+            default=0.01,
+            tex_name="K_{12}",
+            info="Pressure-error modulation gain in the power-order loop",
+        )
+        self.K13 = NumParam(
+            default=0.0,
+            tex_name="K_{13}",
+            info="MW-demand gain in the pressure set point",
+        )
+        self.K14 = NumParam(
+            default=0.1,
+            tex_name="K_{14}",
+            info="Power-order integral gain",
+        )
 
         # Research-only matched intervention. PSEL=1 is the pressure-coupled
         # model. PSEL=0 retains every state, controller, limiter, delay, and
@@ -88,30 +199,138 @@ class TGOV5Data(TGBaseData):
             info="Binary pressure-path selector for matched interventions",
         )
 
-        self.RMAX = NumParam(default=0.004, tex_name="R_{MAX}", unit="p.u./s")
-        self.RMIN = NumParam(default=-0.004, tex_name="R_{MIN}", unit="p.u./s")
-        self.LMAX = NumParam(default=1.0, tex_name="L_{MAX}", unit="p.u.")
-        self.LMIN = NumParam(default=-0.4, tex_name="L_{MIN}", unit="p.u.")
+        self.RMAX = NumParam(
+            default=0.004,
+            tex_name="R_{MAX}",
+            unit="p.u./s",
+            info="Maximum power-order opening rate",
+        )
+        self.RMIN = NumParam(
+            default=-0.004,
+            tex_name="R_{MIN}",
+            unit="p.u./s",
+            info="Maximum power-order closing rate",
+        )
+        self.LMAX = NumParam(
+            default=1.0,
+            tex_name="L_{MAX}",
+            unit="p.u.",
+            info="Maximum power order",
+        )
+        self.LMIN = NumParam(
+            default=-0.4,
+            tex_name="L_{MIN}",
+            unit="p.u.",
+            info="Minimum power order",
+        )
 
-        self.C1 = NumParam(default=0.0001, tex_name="C_1")
-        self.C2 = NumParam(default=0.1, tex_name="C_2")
-        self.C3 = NumParam(default=0.0, tex_name="C_3")
-        self.B = NumParam(default=20.0, tex_name="B")
-        self.CB = NumParam(default=150.0, tex_name="C_B", unit="s")
-        self.KI = NumParam(default=0.1, tex_name="K_I")
-        self.TI = NumParam(default=12.0, tex_name="T_I", unit="s")
-        self.TR = NumParam(default=12.0, tex_name="T_R", unit="s")
-        self.TR1 = NumParam(default=2.0, tex_name="T_{R1}", unit="s")
-        self.CMAX = NumParam(default=1.15, tex_name="C_{MAX}", unit="p.u.")
-        self.CMIN = NumParam(default=0.3, tex_name="C_{MIN}", unit="p.u.")
-        self.TD = NumParam(default=3.0, tex_name="T_D", unit="s")
-        self.TF = NumParam(default=5.0, tex_name="T_F", unit="s")
-        self.TW = NumParam(default=5.0, tex_name="T_W", unit="s")
-        self.Psp = NumParam(default=0.95, tex_name="P_{SP0}", unit="p.u.")
-        self.TMW = NumParam(default=5.0, tex_name="T_{MW}", unit="s")
-        self.KL = NumParam(default=0.0, tex_name="K_L")
-        self.KMW = NumParam(default=1.0, tex_name="K_{MW}")
-        self.DPE = NumParam(default=0.1, tex_name="D_{PE}", unit="p.u.")
+        self.C1 = NumParam(
+            default=0.0001,
+            tex_name="C_1",
+            info="Flow-squared throttle pressure-drop coefficient",
+        )
+        self.C2 = NumParam(
+            default=0.1,
+            tex_name="C_2",
+            info="Pressure-error gain in the power-order loop",
+        )
+        self.C3 = NumParam(
+            default=0.0,
+            tex_name="C_3",
+            info="Pressure set-point bias",
+        )
+        self.B = NumParam(
+            default=20.0,
+            tex_name="B",
+            info="Frequency bias applied to desired power",
+        )
+        self.CB = NumParam(
+            default=150.0,
+            tex_name="C_B",
+            unit="s",
+            info="Boiler storage time constant",
+        )
+        self.KI = NumParam(
+            default=0.1,
+            tex_name="K_I",
+            info="Pressure-controller gain",
+        )
+        self.TI = NumParam(
+            default=12.0,
+            tex_name="T_I",
+            unit="s",
+            info="Pressure-controller first numerator time constant",
+        )
+        self.TR = NumParam(
+            default=12.0,
+            tex_name="T_R",
+            unit="s",
+            info="Pressure-controller second numerator time constant",
+        )
+        self.TR1 = NumParam(
+            default=2.0,
+            tex_name="T_{R1}",
+            unit="s",
+            info="Pressure-controller denominator time constant",
+        )
+        self.CMAX = NumParam(
+            default=1.15,
+            tex_name="C_{MAX}",
+            unit="p.u.",
+            info="Maximum pressure-controller output",
+        )
+        self.CMIN = NumParam(
+            default=0.3,
+            tex_name="C_{MIN}",
+            unit="p.u.",
+            info="Minimum pressure-controller output",
+        )
+        self.TD = NumParam(
+            default=3.0,
+            tex_name="T_D",
+            unit="s",
+            info="Fuel-supply delay; restricted to 90 s in this adapter",
+        )
+        self.TF = NumParam(
+            default=5.0,
+            tex_name="T_F",
+            unit="s",
+            info="Fuel-system lag time constant",
+        )
+        self.TW = NumParam(
+            default=5.0,
+            tex_name="T_W",
+            unit="s",
+            info="Water-wall lag time constant",
+        )
+        self.Psp = NumParam(
+            default=0.95,
+            tex_name="P_{SP0}",
+            unit="p.u.",
+            info="Initial throttle-pressure set point",
+        )
+        self.TMW = NumParam(
+            default=5.0,
+            tex_name="T_{MW}",
+            unit="s",
+            info="Electrical-power measurement lag time constant",
+        )
+        self.KL = NumParam(
+            default=0.0,
+            tex_name="K_L",
+            info="Load-reference feedback gain",
+        )
+        self.KMW = NumParam(
+            default=1.0,
+            tex_name="K_{MW}",
+            info="Electrical-power measurement gain",
+        )
+        self.DPE = NumParam(
+            default=0.1,
+            tex_name="D_{PE}",
+            unit="p.u.",
+            info="Pressure-error deadband half-width",
+        )
 
 
 class TGOV5Model(TGBase):
@@ -533,13 +752,37 @@ class TGOV5Model(TGBase):
 
 
 class TGOV5(TGOV5Data, TGOV5Model):
-    """Auditable single-shaft TGOV5 implementation for ANDES.
+    """Single-shaft TGOV5 boiler-turbine-governor model for ANDES.
 
-    The original commercial model also permits cross-compound HP/LP outputs.
-    This adapter intentionally supports and validates only a single shaft.
+    TGOV5 couples a speed governor and load controller to a staged steam
+    turbine, boiler-pressure dynamics, a pressure controller, and a delayed
+    fuel-and-heat path. Internal steam-flow and turbine-power signals are on
+    turbine base; ``PBASE`` converts the mechanical output to ANDES system
+    base.
+
+    This implementation is a source-traceable research reconstruction of the
+    public TGOV5 equations [1]_ [2]_ and the Gumede benchmark data [3]_. It is
+    not proprietary PSS/E code and does not claim numerical equivalence to a
+    commercial implementation.
+
+    Notes
+    -----
+    * One aggregate mechanical-power output is implemented. Cross-compound
+      HP/LP outputs are outside the validated scope.
+    * The current ANDES ``Delay`` block is constructed with one scalar delay.
+      Therefore ``TD`` is fail-closed at 90 s for the validated benchmark.
+    * ``PSEL`` is a repository-only binary pressure-path selector for matched
+      research interventions; it is not a public TGOV5 parameter.
+
+    References
+    ----------
+    .. [1] IEEE PES Task Force, *Dynamic Models for Turbine-Governors in Power
+       System Studies*, PES-TR1, 2013.
+    .. [2] Siemens PTI, *PSS/E Model Data Sheets*, TGOV5 model, release 29.
+    .. [3] N. S. Gumede, *Eskom-ZESA Interconnected Power System Modelling*,
+       University of the Witwatersrand, 2016.
     """
 
     def __init__(self, system, config):
         TGOV5Data.__init__(self)
         TGOV5Model.__init__(self, system, config)
-
