@@ -1,4 +1,4 @@
-"""Generate the ANDES-style reStructuredText reference for TGOV5."""
+"""Generate ANDES-style reStructuredText references for repository models."""
 
 from __future__ import annotations
 
@@ -8,19 +8,22 @@ from pathlib import Path
 
 from andes.system import System
 
-from power_system_dynamic_models.andes import TGOV5
+from power_system_dynamic_models.andes import LCC2T, TGOV5
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUTPUT = REPOSITORY_ROOT / "docs" / "TGOV5_MODEL_REFERENCE.rst"
+MODELS = {
+    "LCC2T": LCC2T,
+    "TGOV5": TGOV5,
+}
 
 
-def generate(output: Path) -> None:
+def generate(model_name: str, output: Path) -> None:
     """Prepare the symbolic model and write its native ANDES documentation."""
     system = System(default_config=True, no_output=True, no_undill=True)
-    model = TGOV5(system, None)
+    model = MODELS[model_name](system, None)
 
-    with tempfile.TemporaryDirectory(prefix="tgov5-pycode-") as pycode_path:
+    with tempfile.TemporaryDirectory(prefix=f"{model_name.lower()}-pycode-") as pycode_path:
         model.prepare(pycode_path=pycode_path)
 
     # Model.doc() resolves prepared equation calls through the parent System.
@@ -31,16 +34,22 @@ def generate(output: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Generate the TGOV5 reference using ANDES Model.doc().",
+        description="Generate a model reference using ANDES Model.doc().",
+    )
+    parser.add_argument(
+        "--model",
+        choices=sorted(MODELS),
+        default="TGOV5",
+        help="model to document (default: TGOV5)",
     )
     parser.add_argument(
         "--output",
         type=Path,
-        default=DEFAULT_OUTPUT,
-        help=f"output path (default: {DEFAULT_OUTPUT})",
+        help="output path (default: docs/<MODEL>_MODEL_REFERENCE.rst)",
     )
     args = parser.parse_args()
-    generate(args.output.resolve())
+    output = args.output or REPOSITORY_ROOT / "docs" / f"{args.model}_MODEL_REFERENCE.rst"
+    generate(args.model, output.resolve())
 
 
 if __name__ == "__main__":

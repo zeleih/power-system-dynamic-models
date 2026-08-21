@@ -2,29 +2,45 @@
 
 from __future__ import annotations
 
+import importlib
 
-def register_tgov5() -> None:
-    """Idempotently expose :class:`TGOV5` through ANDES' governor registry."""
+
+def _register_model(class_name: str, model_class: type, module_name: str) -> None:
+    """Idempotently expose one external model through an ANDES registry."""
 
     import sys
 
     import andes.models
-    import andes.models.governor
 
-    from .tgov5 import TGOV5
+    model_module = importlib.import_module(f"andes.models.{module_name}")
 
     # ANDES imports generated numerical code through a process-global package
     # named ``pycode``. A notebook can retain stale generated modules after its
     # registry changes, so clear only those modules before the next load.
-    for module_name in tuple(sys.modules):
-        if module_name == "pycode" or module_name.startswith("pycode."):
-            del sys.modules[module_name]
+    for loaded_name in tuple(sys.modules):
+        if loaded_name == "pycode" or loaded_name.startswith("pycode."):
+            del sys.modules[loaded_name]
 
-    setattr(andes.models.governor, "TGOV5", TGOV5)
-    for module_name, class_names in andes.models.file_classes:
-        if module_name == "governor":
-            if "TGOV5" not in class_names:
-                class_names.append("TGOV5")
+    setattr(model_module, class_name, model_class)
+    for registered_module, class_names in andes.models.file_classes:
+        if registered_module == module_name:
+            if class_name not in class_names:
+                class_names.append(class_name)
             return
-    raise RuntimeError("ANDES governor registry entry was not found")
+    raise RuntimeError(f"ANDES {module_name!r} registry entry was not found")
 
+
+def register_tgov5() -> None:
+    """Idempotently expose :class:`TGOV5` through ANDES' governor registry."""
+
+    from .tgov5 import TGOV5
+
+    _register_model("TGOV5", TGOV5, "governor")
+
+
+def register_lcc2t() -> None:
+    """Idempotently expose :class:`LCC2T` through ANDES' AC/DC registry."""
+
+    from .lcc2t import LCC2T
+
+    _register_model("LCC2T", LCC2T, "acdc")
