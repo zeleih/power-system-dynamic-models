@@ -4,14 +4,22 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "power-system-dynamic-models"
-version = "0.1.0"
+version = "0.2.0"
 description = "Auditable, source-traceable dynamic models for power-system studies"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "zeleih" }]
-keywords = ["power systems", "dynamic models", "ANDES", "TGOV5", "governor"]
+keywords = [
+  "power systems",
+  "dynamic models",
+  "ANDES",
+  "TGOV5",
+  "governor",
+  "HVDC",
+  "LCC",
+]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Science/Research",

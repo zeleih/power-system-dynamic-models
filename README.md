@@ -5,153 +5,175 @@
 [![ANDES](https://img.shields.io/badge/ANDES-tested%201.10.1-00599c.svg)](https://github.com/CURENT/andes)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Source-traceable dynamic models for power-system research. The first model is a
-single-shaft **TGOV5 boiler-turbine-governor for ANDES**, reconstructed from public
-equations and packaged with explicit validation boundaries.
+Source-traceable, independently implemented dynamic models for power-system research. Each model
+is packaged with ANDES-style symbolic source, a model card, public-source provenance, numerical
+contracts, and an explicit list of claims that remain unvalidated.
 
 > [!IMPORTANT]
-> This is an independent research implementation. It is not official ANDES code,
-> proprietary PSS/E source code, or a claim of commercial-model numerical parity.
+> This is an independent research library. It is not official ANDES code, proprietary simulator
+> source code, or a claim of commercial-model numerical parity.
 
-## TGOV5 model overview
+## Model catalog
 
-TGOV5 represents the coupled response of a speed governor, load controller, staged
-steam turbine, boiler pressure, pressure controller, and delayed fuel/heat path.
+| Model | Category | Implemented scope | Model card | Documentation |
+|---|---|---|---|---|
+| **TGOV5** | Boiler–turbine–governor | Single shaft, boiler pressure, pressure controller, staged steam path, exact 90 s benchmark delay | [Gumede 2016](models/tgov5_gumede2016/README.md) | [Guide](docs/TGOV5_MODEL_GUIDE.md) · [Reference](docs/TGOV5_MODEL_REFERENCE.rst) · [Audit](docs/TGOV5_AUDIT.md) |
+| **LCC2T** | Two-terminal LCC-HVDC | Average-value converters, dynamic DC current, rectifier PI, VDCOL, reactive demand, filters, block and ramped recovery | [Public two-bus card](models/lcc2t_public_2bus/README.md) | [Guide](docs/LCC2T_MODEL_GUIDE.md) · [Reference](docs/LCC2T_MODEL_REFERENCE.rst) · [Audit](docs/LCC2T_AUDIT.md) |
 
-| Capability | This release |
-|---|---|
-| Runtime | Tested with public ANDES 1.10.1; package range `>=1.9.3,<2` |
-| Topology | Single shaft, one mechanical-power output |
-| Parameter set | Gumede (2016) aggregate benchmark |
-| Fuel delay | Exact 90 s time-domain delay |
-| Internal base | Turbine base; `PBASE` converts output to system base |
-| Validation level | Source-consistent research benchmark |
+## Repository layout
 
 ```text
- speed ─► governor ─┐
-                    ▼
- demand ─► power order ─► valve ─► steam stages ─► mechanical power
-            ▲                        │
-            │                        ▼
- measured power ◄──────────── boiler/throttle pressure
-                                     ▲
- pressure set point ─► controller ─► fuel ─► water wall ─► delay ─► heat
+src/power_system_dynamic_models/andes/   original ANDES model implementations
+models/<model_card>/                     parameter provenance and validated scope
+docs/                                    modeling guides, generated references, audits
+examples/                                minimal executable studies
+tests/                                   standalone symbolic and numerical contracts
+tools/                                   documentation and release helpers
 ```
 
-## Symbolic modeling in ANDES
+The root README is a catalog. Model-specific equations, parameter assumptions, and evidence
+boundaries live with each model rather than being mixed into a repository-wide claim.
 
-The implementation follows the equation-oriented ANDES model style. Standard
-transfer functions use ANDES blocks, while the pressure DAE loop and custom
-controller relationships remain explicit and auditable.
-
-```python
-self.PD = State(
-    info="Drum pressure",
-    t_const=self.CB,
-    v_str="pd0",
-    e_str="Heat-L4_y",
-)
-self.PT = Algeb(
-    info="Throttle pressure",
-    v_str="Psp",
-    e_str="PD-(C1-K9*PD)*L4_y*L4_y-PT",
-)
-self.L4 = Lag(
-    u="Valve_y*(PSEL*PT+(1-PSEL)*Psp)",
-    T=self.T4,
-    K=1.0,
-)
-```
-
-## Install and register
+## Install
 
 ```bash
 python -m pip install -e .
 ```
 
-Register the external model before loading a case that contains a `TGOV5` sheet:
+The package declares `andes>=1.9.3,<2` and is tested in GitHub Actions on Python 3.11 and 3.12.
+
+## Register external models
+
+Register a model before loading an ANDES workbook that contains its sheet:
 
 ```python
 import andes
+from power_system_dynamic_models.andes import register_lcc2t, register_tgov5
+
+register_tgov5()
+register_lcc2t()
+system = andes.load("case_with_external_models.xlsx", setup=False)
+```
+
+Registration is idempotent and does not modify the installed ANDES source tree.
+
+## LCC2T quick start
+
+`LCC2T` connects a rectifier-side AC bus and an inverter-side AC bus. From the receiving grid it
+behaves as a controlled active-power injection that also consumes converter reactive power and
+can receive independent shunt-filter compensation. It is not a negative load or a synchronous
+generator model.
+
+```python
+system.add(
+    "LCC2T",
+    idx="DC1",
+    busr=1,
+    busi=2,
+    p0=0.5,
+    control=2,
+    pmax=1.0,
+)
+system.add(
+    "Alter",
+    param_dict={
+        "idx": "BLOCK_DC1",
+        "t": 0.1,
+        "model": "LCC2T",
+        "dev": "DC1",
+        "src": "block",
+        "method": "=",
+        "amount": 1.0,
+    },
+)
+```
+
+Run the complete two-bus example with:
+
+```bash
+python examples/run_lcc2t_two_bus.py
+```
+
+The public card is dimensionless and suitable for model verification. A study of a physical link
+must establish its own AC/DC bases, converter ratios, commutation reactances, line R/L values,
+control settings, filter steps, and protection sequence.
+
+## TGOV5 quick start
+
+TGOV5 represents a coupled governor, load controller, staged steam turbine, boiler-pressure
+system, pressure controller, and delayed fuel/heat path. The published repository adapter is
+restricted to the single-shaft Gumede (2016) aggregate benchmark and an exact 90 s delay.
+
+```python
 from power_system_dynamic_models.andes import register_tgov5
 
 register_tgov5()
-system = andes.load("case_with_tgov5.xlsx", setup=False)
 ```
 
-The tested benchmark parameters are in
-[`models/tgov5_gumede2016/parameters.json`](models/tgov5_gumede2016/parameters.json).
-
-## Documentation
-
-- [TGOV5 modeling example](docs/TGOV5_MODEL_GUIDE.md) — ANDES-style overview, block
-  diagram, equations, and implementation mapping.
-- [TGOV5 generated reference](docs/TGOV5_MODEL_REFERENCE.rst) — parameters, variables,
-  initialization, equations, services, discretes, and blocks generated from the model.
-- [Validation audit](docs/TGOV5_AUDIT.md) — passed checks and remaining evidence gaps.
-- [ANDES upstream plan](docs/UPSTREAMING.md) — source-file map, blockers, tests, and PR
-  sequence for proposing the model to ANDES.
-
-Regenerate the API-style model reference after changing model metadata or equations:
-
-```bash
-python tools/generate_model_reference.py
-```
+`PSEL` is a repository-only matched-intervention selector, not a public TGOV5 parameter. See the
+[TGOV5 guide](docs/TGOV5_MODEL_GUIDE.md) before using it.
 
 ## Verification
 
-The 2026-07-22 release audit reported:
+```bash
+python -m pip install -e '.[test]'
+python -m pytest
+python tools/generate_model_reference.py --model TGOV5
+python tools/generate_model_reference.py --model LCC2T
+```
 
-- 22 source-mapping, initialization, physical-direction, delay, and time-step tests passed;
-- 11 pressure-selector, evidence-hierarchy, and revision-integrity tests passed;
-- standalone contract tests passed with unmodified public ANDES 1.10.1;
-- packaged parameter defaults, core equations, and block inputs matched the audited research
-  source.
+The suite verifies metadata, registry behavior, initialization contracts, model-specific physical
+identities, and time-domain behavior. Passing these tests supports the documented public model
+contracts; it does not establish field validation or proprietary-code equivalence.
 
-GitHub Actions repeats the standalone tests on Python 3.11 and 3.12. These checks support a
-source-consistent research release; they do not establish proprietary-code or field equivalence.
+## Current validation boundaries
 
-## Current model boundary
+### TGOV5
 
-The adapter deliberately fails closed around the validated benchmark:
+- source-consistent single-shaft aggregate benchmark;
+- no cross-compound HP/LP outputs;
+- `TD` must be 90 s in the current adapter;
+- no claim of plant-specific or proprietary PSS/E parity.
 
-- `TD` must be 90 s because the current implementation constructs one scalar ANDES `Delay`;
-- `K1 + ... + K8` must equal 1;
-- `KI`, `TR1`, and `Psp` must be positive;
-- initialization enforces the published pressure equilibrium and positive pressure-drop terms;
-- active cross-compound HP/LP outputs are outside the implemented scope.
+### LCC2T
 
-`PSEL` is a repository-only binary intervention selector, not a public TGOV5 parameter.
-`PSEL=1` enables the pressure-coupled path. `PSEL=0` cuts the two outgoing pressure paths while
-retaining the remaining states, controllers, limits, and delay for matched research ablation.
-
-## Upstream status
-
-This repository is an **upstream candidate**, not a merge-ready ANDES patch. Before proposing
-it to `CURENT/andes`, the canonical model needs a standard-only data class, a maintainer-approved
-strategy for arbitrary `TD`, explicit PSS/E DYR import mapping, an ANDES case fixture, and an
-accepted validation comparison. See [docs/UPSTREAMING.md](docs/UPSTREAMING.md).
+- positive-sequence, fundamental-frequency, electromechanical-transient model;
+- no valve switching, harmonics, EMT commutation failure, or protection hardware;
+- no claim that the public two-bus parameters describe a physical HVDC project;
+- no equipment-stress conclusion without per-link kV/ohm/mH calibration; and
+- a slack source represents an ideal external sending grid in the minimal example.
 
 ## Sources and provenance
 
-The model was reconstructed from public descriptions and cross-checked against:
+Models are reconstructed from public equations and descriptions, then implemented independently
+using the official ANDES symbolic-model API. Public references are cited in each model card and
+audit. Third-party source files, licensed manuals, proprietary model code, and private simulation
+outputs are not redistributed.
 
-- IEEE PES-TR1, *Dynamic Models for Turbine-Governors in Power System Studies* (2013);
-- PSS/E-29 public *Model Data Sheets*, TGOV5 block diagram and parameter inventory;
-- N. S. Gumede, *Eskom-ZESA Interconnected Power System Modelling* (2016), Table C.0.7 and
-  Figure C.0.2;
-- public EMTP and PowerWorld TGOV5 descriptions.
+The primary references currently include:
 
-Only original repository code and parameter transcriptions are distributed here. Third-party
-documents retain their original rights and are cited rather than redistributed.
+- IEEE PES-TR1 and public TGOV5 model data sheets;
+- N. S. Gumede (2016), TGOV5 aggregate benchmark;
+- [PSAT 2.1.11](https://faraday1.ucd.ie/psat.html) `HVclass` and standard average-value
+  LCC-HVDC equations; and
+- the official [ANDES 1.9.3 Model API](https://docs.andes.app/en/v1.9.3/modeling/_generated/andes.core.model.Model.html)
+  and [model-structure guide](https://docs.andes.app/en/v2.0.0/modeling/creating-models/model-structure.html).
 
 ## Adding another model
 
-The broad repository name leaves room for governors, exciters, load models, and controllers.
-Each addition should include an implementation, model card, parameter provenance, initialization
-checks, numerical tests, and an explicit list of unvalidated claims.
+Every addition should include:
+
+1. an original implementation under `src/power_system_dynamic_models/andes/`;
+2. an idempotent runtime registration function;
+3. a model card and parameter-provenance record under `models/`;
+4. an ANDES-style guide and generated model reference;
+5. symbolic, initialization, numerical, and event tests; and
+6. an explicit list of unsupported or unvalidated claims.
+
+See [docs/UPSTREAMING.md](docs/UPSTREAMING.md) for the additional work required before proposing
+a model to the official ANDES repository.
 
 ## License
 
-MIT for this repository. A contribution to ANDES must also satisfy the upstream project's GPL-3.0
-licensing and contribution requirements.
+MIT for this repository. A contribution to ANDES must separately satisfy the upstream project's
+GPL-3.0 licensing and contribution requirements.
